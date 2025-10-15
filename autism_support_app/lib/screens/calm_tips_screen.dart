@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/sample_data.dart';
 import '../models/calm_tip.dart';
+import '../services/favorites_service.dart';
 
 class CalmTipsScreen extends StatefulWidget {
   const CalmTipsScreen({super.key});
@@ -13,9 +14,11 @@ class CalmTipsScreen extends StatefulWidget {
 class _CalmTipsScreenState extends State<CalmTipsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  Set<String> _favoriteTips = {};
 
   final List<String> categories = [
     'All',
+    'Favourite',
     'Panic Attacks',
     'Anxiety',
     'Stress',
@@ -27,6 +30,7 @@ class _CalmTipsScreenState extends State<CalmTipsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: categories.length, vsync: this);
+    _loadFavorites();
   }
 
   @override
@@ -35,11 +39,46 @@ class _CalmTipsScreenState extends State<CalmTipsScreen>
     super.dispose();
   }
 
+  Future<void> _loadFavorites() async {
+    final favorites = await FavoritesService.getFavoriteTips();
+    setState(() {
+      _favoriteTips = favorites;
+    });
+  }
+
+  Future<void> _toggleFavorite(String tipTitle) async {
+    await FavoritesService.toggleFavoriteTip(tipTitle);
+    await _loadFavorites();
+  }
+
   List<CalmTip> _getFilteredTips(String category) {
     if (category == 'All') {
-      return sampleCalmTips;
+      final tips = List<CalmTip>.from(sampleCalmTips);
+      tips.sort((a, b) {
+        final aFav = _favoriteTips.contains(a.title);
+        final bFav = _favoriteTips.contains(b.title);
+        if (aFav && !bFav) return -1;
+        if (!aFav && bFav) return 1;
+        return 0;
+      });
+      return tips;
     }
-    return sampleCalmTips.where((tip) => tip.category == category).toList();
+    if (category == 'Favourite') {
+      return sampleCalmTips
+          .where((tip) => _favoriteTips.contains(tip.title))
+          .toList();
+    }
+    final tips = sampleCalmTips
+        .where((tip) => tip.category == category)
+        .toList();
+    tips.sort((a, b) {
+      final aFav = _favoriteTips.contains(a.title);
+      final bFav = _favoriteTips.contains(b.title);
+      if (aFav && !bFav) return -1;
+      if (!aFav && bFav) return 1;
+      return 0;
+    });
+    return tips;
   }
 
   @override
@@ -69,6 +108,14 @@ class _CalmTipsScreenState extends State<CalmTipsScreen>
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
+          labelStyle: GoogleFonts.quicksand(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: GoogleFonts.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
           tabs: categories.map((category) => Tab(text: category)).toList(),
         ),
       ),
@@ -124,6 +171,18 @@ class _CalmTipsScreenState extends State<CalmTipsScreen>
                         Icons.lightbulb_outline,
                         color: Colors.purple,
                         size: 30,
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          _favoriteTips.contains(tip.title)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: _favoriteTips.contains(tip.title)
+                              ? Colors.red
+                              : Colors.grey,
+                          size: 28,
+                        ),
+                        onPressed: () => _toggleFavorite(tip.title),
                       ),
                       onTap: () {
                         showDialog(
