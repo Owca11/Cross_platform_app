@@ -10,8 +10,9 @@ class FeelingSelectionScreen extends StatefulWidget {
   State<FeelingSelectionScreen> createState() => _FeelingSelectionScreenState();
 }
 
-class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
-  String _selectedCategory = 'Feelings';
+class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   Set<String> _favoriteFeelings = {};
   Set<String> _favoriteNeeds = {};
   Set<String> _favoriteThoughts = {};
@@ -27,7 +28,14 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _categories.length, vsync: this);
     _loadFavorites();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavorites() async {
@@ -64,8 +72,8 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
     return false;
   }
 
-  List<dynamic> get _currentItems {
-    switch (_selectedCategory) {
+  List<dynamic> _getFilteredItems(String category) {
+    switch (category) {
       case 'All':
         final allItems = [...sampleFeelings, ...sampleNeeds, ...sampleThoughts];
         allItems.sort((a, b) {
@@ -142,6 +150,22 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
             ),
           ),
         ),
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: GoogleFonts.quicksand(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: GoogleFonts.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          tabs: _categories.map((category) => Tab(text: category)).toList(),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -151,203 +175,176 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
-          children: [
-            // Category selector
-            Container(
+        child: TabBarView(
+          controller: _tabController,
+          children: _categories.map((category) {
+            final filteredItems = _getFilteredItems(category);
+            return GridView.builder(
               padding: const EdgeInsets.all(16.0),
-              child: SegmentedButton<String>(
-                segments: _categories
-                    .map(
-                      (category) => ButtonSegment<String>(
-                        value: category,
-                        label: Text(
-                          category,
-                          style: GoogleFonts.quicksand(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                selected: {_selectedCategory},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _selectedCategory = newSelection.first;
-                  });
-                },
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
               ),
-            ),
-            // Grid of items
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16.0),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 16.0,
-                ),
-                itemCount: _currentItems.length,
-                itemBuilder: (context, index) {
-                  final item = _currentItems[index];
-                  return GestureDetector(
-                    onTap: () {
-                      // Show bigger picture with text
-                      showDialog(
-                        context: context,
-                        builder: (context) => Dialog(
-                          shape: RoundedRectangleBorder(
+              itemCount: filteredItems.length,
+              itemBuilder: (context, index) {
+                final item = filteredItems[index];
+                return GestureDetector(
+                  onTap: () {
+                    // Show bigger picture with text
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(20.0),
+                          decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(20.0),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20.0),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.purple.shade100,
-                                  Colors.pink.shade100,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.purple.shade100,
+                                Colors.pink.shade100,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  item.icon,
-                                  size: 100,
-                                  color: Theme.of(context).colorScheme.primary,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                item.icon,
+                                size: 100,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                item.name,
+                                style: GoogleFonts.quicksand(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.purple.shade800,
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  item.name,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                item.prompt,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.quicksand(
+                                  fontSize: 18,
+                                  color: Colors.purple.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              ElevatedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15.0),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 30,
+                                    vertical: 12,
+                                  ),
+                                ),
+                                child: Text(
+                                  'OK',
                                   style: GoogleFonts.quicksand(
-                                    fontSize: 32,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple.shade800,
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  item.prompt,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.quicksand(
-                                    fontSize: 18,
-                                    color: Colors.purple.shade700,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.purple,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15.0),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 30,
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'OK',
-                                    style: GoogleFonts.quicksand(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15.0),
-                      ),
-                      elevation: 4,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15.0),
-                          gradient: LinearGradient(
-                            colors: [Colors.white, Colors.purple.shade50],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Center(
-                                    child: Icon(
-                                      item.icon,
-                                      size:
-                                          MediaQuery.of(context).size.width *
-                                          0.15,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0,
-                                      ),
-                                      child: Text(
-                                        item.name,
-                                        style: GoogleFonts.quicksand(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.purple.shade800,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: IconButton(
-                                icon: Icon(
-                                  _isFavorite(item.name)
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: _isFavorite(item.name)
-                                      ? Colors.red
-                                      : Colors.grey,
-                                  size: 24,
-                                ),
-                                onPressed: () => _toggleFavorite(item.name),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15.0),
+                    ),
+                    elevation: 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15.0),
+                        gradient: LinearGradient(
+                          colors: [Colors.white, Colors.purple.shade50],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Stack(
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Center(
+                                  child: Icon(
+                                    item.icon,
+                                    size:
+                                        MediaQuery.of(context).size.width *
+                                        0.15,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0,
+                                    ),
+                                    child: Text(
+                                      item.name,
+                                      style: GoogleFonts.quicksand(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.purple.shade800,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: IconButton(
+                              icon: Icon(
+                                _isFavorite(item.name)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFavorite(item.name)
+                                    ? Colors.red
+                                    : Colors.grey,
+                                size: 24,
+                              ),
+                              onPressed: () => _toggleFavorite(item.name),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                );
+              },
+            );
+          }).toList(),
         ),
       ),
     );
