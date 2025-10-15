@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/feeling_selection_screen.dart';
 import 'screens/calm_tips_screen.dart';
+import 'screens/water_tracker_screen.dart';
 
 void main() {
   runApp(const UnspokenApp());
@@ -17,7 +18,7 @@ class UnspokenApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
         useMaterial3: true,
-        fontFamily: GoogleFonts.dancingScript().fontFamily,
+        fontFamily: GoogleFonts.quicksand().fontFamily,
         appBarTheme: const AppBarTheme(
           toolbarHeight: 40, // Smaller app bar
           elevation: 2, // Less prominent shadow
@@ -35,7 +36,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -48,13 +50,15 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
     _controller.forward();
 
@@ -167,6 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     FeelingSelectionScreen(),
     CalmTipsScreen(),
+    WaterTrackerScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -208,14 +213,36 @@ class _HomeScreenState extends State<HomeScreen> {
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.emoji_emotions),
-            label: 'Feelings/Needs',
+            label: Text(
+              'Feelings/Needs',
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ).data,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.lightbulb),
-            label: 'Calm Tips',
+            label: Text(
+              'Calm Tips',
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ).data,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.local_drink),
+            label: Text(
+              'Water Tracker',
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ).data,
           ),
         ],
         currentIndex: _selectedIndex,

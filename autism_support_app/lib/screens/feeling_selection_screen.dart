@@ -224,7 +224,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   item.name,
-                                  style: GoogleFonts.dancingScript(
+                                  style: GoogleFonts.quicksand(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.purple.shade800,
