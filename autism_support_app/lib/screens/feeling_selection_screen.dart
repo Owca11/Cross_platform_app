@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../data/sample_data.dart';
 import '../services/favorites_service.dart';
+import '../services/emotion_service.dart';
+import '../models/feeling.dart';
 
 class FeelingSelectionScreen extends StatefulWidget {
   const FeelingSelectionScreen({super.key});
@@ -17,6 +19,10 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
   Set<String> _favoriteNeeds = {};
   Set<String> _favoriteThoughts = {};
 
+  List<Feeling> _feelings = [];
+  List<Need> _needs = [];
+  List<Thought> _thoughts = [];
+
   final List<String> _categories = [
     'All',
     'Favourite',
@@ -29,13 +35,30 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
-    _loadFavorites();
+    _loadData();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadData() async {
+    final feelings = await EmotionService.getFeelings();
+    final needs = await EmotionService.getNeeds();
+    final thoughts = await EmotionService.getThoughts();
+    final favoriteFeelings = await FavoritesService.getFavoriteFeelings();
+    final favoriteNeeds = await FavoritesService.getFavoriteNeeds();
+    final favoriteThoughts = await FavoritesService.getFavoriteThoughts();
+    setState(() {
+      _feelings = feelings;
+      _needs = needs;
+      _thoughts = thoughts;
+      _favoriteFeelings = favoriteFeelings;
+      _favoriteNeeds = favoriteNeeds;
+      _favoriteThoughts = favoriteThoughts;
+    });
   }
 
   Future<void> _loadFavorites() async {
@@ -49,24 +72,210 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
     });
   }
 
+  void _showEditDialog(BuildContext context, dynamic item) async {
+    final TextEditingController nameController = TextEditingController(
+      text: item.name,
+    );
+    final TextEditingController promptController = TextEditingController(
+      text: item.prompt,
+    );
+
+    bool isCustom = false;
+    if (item is Feeling) {
+      isCustom = await EmotionService.isCustomFeeling(item.name);
+    } else if (item is Need) {
+      isCustom = await EmotionService.isCustomNeed(item.name);
+    } else if (item is Thought) {
+      isCustom = await EmotionService.isCustomThought(item.name);
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.0),
+        ),
+        child: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.25,
+          height: MediaQuery.of(context).size.height * 0.45,
+          child: Container(
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              gradient: LinearGradient(
+                colors: [Colors.purple.shade100, Colors.pink.shade100],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Edit ${item.name}',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple.shade800,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  readOnly: !isCustom,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    labelStyle: GoogleFonts.quicksand(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                  style: GoogleFonts.quicksand(),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: promptController,
+                  decoration: InputDecoration(
+                    labelText: 'Prompt',
+                    labelStyle: GoogleFonts.quicksand(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                  style: GoogleFonts.quicksand(),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.quicksand(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final newName = nameController.text.trim();
+                        final newPrompt = promptController.text.trim();
+                        if (newName.isNotEmpty && newPrompt.isNotEmpty) {
+                          if (item is Feeling) {
+                            if (isCustom) {
+                              await EmotionService.updateFeeling(
+                                item.name,
+                                newName,
+                                newPrompt,
+                              );
+                            } else {
+                              await EmotionService.saveFeeling(
+                                Feeling(
+                                  name: item
+                                      .name, // Keep original name for defaults
+                                  icon: item.icon,
+                                  prompt: newPrompt,
+                                ),
+                              );
+                            }
+                          } else if (item is Need) {
+                            if (isCustom) {
+                              await EmotionService.updateNeed(
+                                item.name,
+                                newName,
+                                newPrompt,
+                              );
+                            } else {
+                              await EmotionService.saveNeed(
+                                Need(
+                                  name: item
+                                      .name, // Keep original name for defaults
+                                  icon: item.icon,
+                                  prompt: newPrompt,
+                                ),
+                              );
+                            }
+                          } else if (item is Thought) {
+                            if (isCustom) {
+                              await EmotionService.updateThought(
+                                item.name,
+                                newName,
+                                newPrompt,
+                              );
+                            } else {
+                              await EmotionService.saveThought(
+                                Thought(
+                                  name: item
+                                      .name, // Keep original name for defaults
+                                  icon: item.icon,
+                                  prompt: newPrompt,
+                                ),
+                              );
+                            }
+                          }
+                          await _loadData();
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: GoogleFonts.quicksand(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _toggleFavorite(String name) async {
     // Determine the category based on the item name
-    if (sampleFeelings.any((item) => item.name == name)) {
+    if (_feelings.any((item) => item.name == name)) {
       await FavoritesService.toggleFavoriteFeeling(name);
-    } else if (sampleNeeds.any((item) => item.name == name)) {
+    } else if (_needs.any((item) => item.name == name)) {
       await FavoritesService.toggleFavoriteNeed(name);
-    } else if (sampleThoughts.any((item) => item.name == name)) {
+    } else if (_thoughts.any((item) => item.name == name)) {
       await FavoritesService.toggleFavoriteThought(name);
     }
     await _loadFavorites();
   }
 
   bool _isFavorite(String name) {
-    if (sampleFeelings.any((item) => item.name == name)) {
+    if (_feelings.any((item) => item.name == name)) {
       return _favoriteFeelings.contains(name);
-    } else if (sampleNeeds.any((item) => item.name == name)) {
+    } else if (_needs.any((item) => item.name == name)) {
       return _favoriteNeeds.contains(name);
-    } else if (sampleThoughts.any((item) => item.name == name)) {
+    } else if (_thoughts.any((item) => item.name == name)) {
       return _favoriteThoughts.contains(name);
     }
     return false;
@@ -75,7 +284,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
   List<dynamic> _getFilteredItems(String category) {
     switch (category) {
       case 'All':
-        final allItems = [...sampleFeelings, ...sampleNeeds, ...sampleThoughts];
+        final allItems = [..._feelings, ..._needs, ..._thoughts];
         allItems.sort((a, b) {
           final aFav = _isFavorite((a as dynamic).name);
           final bFav = _isFavorite((b as dynamic).name);
@@ -86,16 +295,12 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
         return allItems;
       case 'Favourite':
         return [
-          ...sampleFeelings.where(
-            (item) => _favoriteFeelings.contains(item.name),
-          ),
-          ...sampleNeeds.where((item) => _favoriteNeeds.contains(item.name)),
-          ...sampleThoughts.where(
-            (item) => _favoriteThoughts.contains(item.name),
-          ),
+          ..._feelings.where((item) => _favoriteFeelings.contains(item.name)),
+          ..._needs.where((item) => _favoriteNeeds.contains(item.name)),
+          ..._thoughts.where((item) => _favoriteThoughts.contains(item.name)),
         ];
       case 'Feelings':
-        final feelings = List.from(sampleFeelings);
+        final feelings = List.from(_feelings);
         feelings.sort((a, b) {
           final aFav = _favoriteFeelings.contains(a.name);
           final bFav = _favoriteFeelings.contains(b.name);
@@ -105,7 +310,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
         });
         return feelings;
       case 'Needs':
-        final needs = List.from(sampleNeeds);
+        final needs = List.from(_needs);
         needs.sort((a, b) {
           final aFav = _favoriteNeeds.contains(a.name);
           final bFav = _favoriteNeeds.contains(b.name);
@@ -115,7 +320,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
         });
         return needs;
       case 'Thoughts':
-        final thoughts = List.from(sampleThoughts);
+        final thoughts = List.from(_thoughts);
         thoughts.sort((a, b) {
           final aFav = _favoriteThoughts.contains(a.name);
           final bFav = _favoriteThoughts.contains(b.name);
@@ -125,7 +330,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
         });
         return thoughts;
       default:
-        return sampleFeelings;
+        return _feelings;
     }
   }
 
@@ -201,68 +406,105 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20.0),
                         ),
-                        child: Container(
-                          padding: const EdgeInsets.all(20.0),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20.0),
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.purple.shade100,
-                                Colors.pink.shade100,
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.3,
+                          height: MediaQuery.of(context).size.height * 0.45,
+                          child: Container(
+                            padding: const EdgeInsets.all(20.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.0),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.purple.shade100,
+                                  Colors.pink.shade100,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                item.icon,
-                                size: 100,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                item.name,
-                                style: GoogleFonts.quicksand(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.purple.shade800,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  item.icon,
+                                  size: 100,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                item.prompt,
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.quicksand(
-                                  fontSize: 18,
-                                  color: Colors.purple.shade700,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              ElevatedButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15.0),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 30,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                child: Text(
-                                  'OK',
+                                const SizedBox(height: 16),
+                                Text(
+                                  item.name,
                                   style: GoogleFonts.quicksand(
-                                    fontSize: 16,
+                                    fontSize: 32,
                                     fontWeight: FontWeight.bold,
+                                    color: Colors.purple.shade800,
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 16),
+                                Text(
+                                  item.prompt,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.quicksand(
+                                    fontSize: 18,
+                                    color: Colors.purple.shade700,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.purple,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            15.0,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'OK',
+                                        style: GoogleFonts.quicksand(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          _showEditDialog(context, item),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            15.0,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 10,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Edit',
+                                        style: GoogleFonts.quicksand(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

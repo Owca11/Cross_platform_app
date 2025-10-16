@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/feeling.dart';
 import '../models/calm_tip.dart';
 
+// Default feelings - these are the initial data
 List<Feeling> sampleFeelings = [
   Feeling(
     name: 'Happy',
