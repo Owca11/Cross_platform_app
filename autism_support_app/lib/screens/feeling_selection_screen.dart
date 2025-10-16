@@ -181,10 +181,13 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
             final filteredItems = _getFilteredItems(category);
             return GridView.builder(
               padding: const EdgeInsets.all(16.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: MediaQuery.of(context).size.width > 600
+                    ? 220
+                    : 200,
                 crossAxisSpacing: 16.0,
                 mainAxisSpacing: 16.0,
+                childAspectRatio: 1.0,
               ),
               itemCount: filteredItems.length,
               itemBuilder: (context, index) {
@@ -290,8 +293,11 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                   child: Icon(
                                     item.icon,
                                     size:
-                                        MediaQuery.of(context).size.width *
-                                        0.15,
+                                        MediaQuery.of(context).size.width > 600
+                                        ? MediaQuery.of(context).size.width *
+                                              0.1
+                                        : MediaQuery.of(context).size.width *
+                                              0.15,
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.primary,
@@ -308,7 +314,11 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                     child: Text(
                                       item.name,
                                       style: GoogleFonts.quicksand(
-                                        fontSize: 20,
+                                        fontSize:
+                                            MediaQuery.of(context).size.width >
+                                                600
+                                            ? 16
+                                            : 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.purple.shade800,
                                       ),
