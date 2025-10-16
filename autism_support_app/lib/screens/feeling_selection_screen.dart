@@ -5,6 +5,7 @@ import '../data/sample_data.dart';
 import '../services/favorites_service.dart';
 import '../services/emotion_service.dart';
 import '../models/feeling.dart';
+import 'dart:async';
 
 class FeelingSelectionScreen extends StatefulWidget {
   const FeelingSelectionScreen({super.key});
@@ -73,22 +74,13 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
     });
   }
 
-  void _showEditDialog(BuildContext context, dynamic item) async {
+  void _showEditDialog(BuildContext context, dynamic item, Function(dynamic) onUpdated) async {
     final TextEditingController nameController = TextEditingController(
       text: item.name,
     );
     final TextEditingController promptController = TextEditingController(
       text: item.prompt,
     );
-
-    bool isCustom = false;
-    if (item is Feeling) {
-      isCustom = await EmotionService.isCustomFeeling(item.name);
-    } else if (item is Need) {
-      isCustom = await EmotionService.isCustomNeed(item.name);
-    } else if (item is Thought) {
-      isCustom = await EmotionService.isCustomThought(item.name);
-    }
 
     IconData selectedIcon = item.icon;
     Color selectedColor = item.color;
@@ -127,7 +119,6 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                   const SizedBox(height: 16),
                   TextField(
                     controller: nameController,
-                    readOnly: !isCustom,
                     decoration: InputDecoration(
                       labelText: 'Name',
                       labelStyle: GoogleFonts.quicksand(),
@@ -773,111 +764,199 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                     // Show bigger picture with text
                     showDialog(
                       context: context,
-                      builder: (context) => Dialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.3,
-                          height: MediaQuery.of(context).size.height * 0.45,
-                          child: Container(
-                            padding: const EdgeInsets.all(20.0),
-                            decoration: BoxDecoration(
+                      builder: (context) => StatefulBuilder(
+                        builder: (context, setState) {
+                          dynamic currentItem = item;
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.0),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.purple.shade100,
-                                  Colors.pink.shade100,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  item.icon,
-                                  size: 100,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  item.name,
-                                  style: GoogleFonts.quicksand(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.purple.shade800,
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.3,
+                              height: MediaQuery.of(context).size.height * 0.45,
+                              child: Container(
+                                padding: const EdgeInsets.all(20.0),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.purple.shade100,
+                                      Colors.pink.shade100,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  item.prompt,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.quicksand(
-                                    fontSize: 18,
-                                    color: Colors.purple.shade700,
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    ElevatedButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.purple,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            15.0,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 10,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        'OK',
-                                        style: GoogleFonts.quicksand(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                    Icon(
+                                      currentItem.icon,
+                                      size: 100,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      currentItem.name,
+                                      style: GoogleFonts.quicksand(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.purple.shade800,
                                       ),
                                     ),
-                                    ElevatedButton(
-                                      onPressed: () =>
-                                          _showEditDialog(context, item),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.blue,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            15.0,
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      currentItem.prompt,
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.quicksand(
+                                        fontSize: 18,
+                                        color: Colors.purple.shade700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.purple,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                15.0,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 10,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'OK',
+                                            style: GoogleFonts.quicksand(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 10,
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(); // Close info dialog
+                                            _showEditDialog(context, currentItem, (updatedItem) async {
+                                              // Update the list
+                                              if (updatedItem is Feeling) {
+                                                int index = _feelings.indexWhere((f) => f.name == item.name);
+                                                if (index != -1) _feelings[index] = updatedItem;
+                                              } else if (updatedItem is Need) {
+                                                int index = _needs.indexWhere((n) => n.name == item.name);
+                                                if (index != -1) _needs[index] = updatedItem;
+                                              } else if (updatedItem is Thought) {
+                                                int index = _thoughts.indexWhere((t) => t.name == item.name);
+                                                if (index != -1) _thoughts[index] = updatedItem;
+                                              }
+                                              await _loadData();
+                                            });
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                15.0,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 10,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Edit',
+                                            style: GoogleFonts.quicksand(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                      child: Text(
-                                        'Edit',
-                                        style: GoogleFonts.quicksand(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            bool isCustom = false;
+                                            if (currentItem is Feeling) {
+                                              isCustom = await EmotionService.isCustomFeeling(currentItem.name);
+                                            } else if (currentItem is Need) {
+                                              isCustom = await EmotionService.isCustomNeed(currentItem.name);
+                                            } else if (currentItem is Thought) {
+                                              isCustom = await EmotionService.isCustomThought(currentItem.name);
+                                            }
+                                            if (!isCustom) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text('Cannot delete default items.', style: GoogleFonts.quicksand()),
+                                                ),
+                                              );
+                                              return;
+                                            }
+                                            final confirmed = await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: Text('Confirm Delete', style: GoogleFonts.quicksand()),
+                                                content: Text('Are you sure you want to delete "${currentItem.name}"?', style: GoogleFonts.quicksand()),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(context).pop(false),
+                                                    child: Text('Cancel', style: GoogleFonts.quicksand()),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(context).pop(true),
+                                                    child: Text('Delete', style: GoogleFonts.quicksand(color: Colors.red)),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            if (confirmed == true) {
+                                              if (currentItem is Feeling) {
+                                                await EmotionService.deleteFeeling(currentItem.name);
+                                              } else if (currentItem is Need) {
+                                                await EmotionService.deleteNeed(currentItem.name);
+                                              } else if (currentItem is Thought) {
+                                                await EmotionService.deleteThought(currentItem.name);
+                                              }
+                                              await _loadData();
+                                              Navigator.of(context).pop();
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(
+                                                15.0,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 10,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Delete',
+                                            style: GoogleFonts.quicksand(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
                       ),
                     );
                   },
