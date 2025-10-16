@@ -9,89 +9,113 @@ class EmotionService {
   static const String _needsKey = 'custom_needs';
   static const String _thoughtsKey = 'custom_thoughts';
 
-  // Get all feelings, merging custom with defaults
+  // Get all feelings, initializing with defaults if not present
   static Future<List<Feeling>> getFeelings() async {
     final prefs = await SharedPreferences.getInstance();
-    final customFeelingsJson = prefs.getStringList(_feelingsKey) ?? [];
+    List<String> customFeelingsJson = prefs.getStringList(_feelingsKey) ?? [];
 
-    // Start with default feelings
-    List<Feeling> feelings = List.from(sampleFeelings);
+    // Initialize with sample feelings if not present
+    if (customFeelingsJson.isEmpty) {
+      for (Feeling feeling in sampleFeelings) {
+        final data = {
+          'name': feeling.name,
+          'iconCodePoint': feeling.icon.codePoint,
+          'iconFontFamily': feeling.icon.fontFamily,
+          'prompt': feeling.prompt,
+          'colorValue': feeling.color.value,
+        };
+        customFeelingsJson.add(jsonEncode(data));
+      }
+      await prefs.setStringList(_feelingsKey, customFeelingsJson);
+    }
 
-    // Add or override with custom feelings
-    for (String json in customFeelingsJson) {
+    // Load all feelings from prefs
+    List<Feeling> feelings = customFeelingsJson.map((json) {
       final Map<String, dynamic> data = jsonDecode(json);
-      final feeling = Feeling(
+      return Feeling(
         name: data['name'],
         icon: IconData(
           data['iconCodePoint'],
           fontFamily: data['iconFontFamily'],
         ),
         prompt: data['prompt'],
+        color: Color(data['colorValue']),
       );
-      // Replace if exists, else add
-      final existingIndex = feelings.indexWhere((f) => f.name == feeling.name);
-      if (existingIndex != -1) {
-        feelings[existingIndex] = feeling;
-      } else {
-        feelings.add(feeling);
-      }
-    }
+    }).toList();
 
     return feelings;
   }
 
-  // Get all needs, merging custom with defaults
+  // Get all needs, initializing with defaults if not present
   static Future<List<Need>> getNeeds() async {
     final prefs = await SharedPreferences.getInstance();
-    final customNeedsJson = prefs.getStringList(_needsKey) ?? [];
+    List<String> customNeedsJson = prefs.getStringList(_needsKey) ?? [];
 
-    List<Need> needs = List.from(sampleNeeds);
+    // Initialize with sample needs if not present
+    if (customNeedsJson.isEmpty) {
+      for (Need need in sampleNeeds) {
+        final data = {
+          'name': need.name,
+          'iconCodePoint': need.icon.codePoint,
+          'iconFontFamily': need.icon.fontFamily,
+          'prompt': need.prompt,
+          'colorValue': need.color.value,
+        };
+        customNeedsJson.add(jsonEncode(data));
+      }
+      await prefs.setStringList(_needsKey, customNeedsJson);
+    }
 
-    for (String json in customNeedsJson) {
+    // Load all needs from prefs
+    List<Need> needs = customNeedsJson.map((json) {
       final Map<String, dynamic> data = jsonDecode(json);
-      final need = Need(
+      return Need(
         name: data['name'],
         icon: IconData(
           data['iconCodePoint'],
           fontFamily: data['iconFontFamily'],
         ),
         prompt: data['prompt'],
+        color: Color(data['colorValue']),
       );
-      final existingIndex = needs.indexWhere((n) => n.name == need.name);
-      if (existingIndex != -1) {
-        needs[existingIndex] = need;
-      } else {
-        needs.add(need);
-      }
-    }
+    }).toList();
 
     return needs;
   }
 
-  // Get all thoughts, merging custom with defaults
+  // Get all thoughts, initializing with defaults if not present
   static Future<List<Thought>> getThoughts() async {
     final prefs = await SharedPreferences.getInstance();
-    final customThoughtsJson = prefs.getStringList(_thoughtsKey) ?? [];
+    List<String> customThoughtsJson = prefs.getStringList(_thoughtsKey) ?? [];
 
-    List<Thought> thoughts = List.from(sampleThoughts);
+    // Initialize with sample thoughts if not present
+    if (customThoughtsJson.isEmpty) {
+      for (Thought thought in sampleThoughts) {
+        final data = {
+          'name': thought.name,
+          'iconCodePoint': thought.icon.codePoint,
+          'iconFontFamily': thought.icon.fontFamily,
+          'prompt': thought.prompt,
+          'colorValue': thought.color.value,
+        };
+        customThoughtsJson.add(jsonEncode(data));
+      }
+      await prefs.setStringList(_thoughtsKey, customThoughtsJson);
+    }
 
-    for (String json in customThoughtsJson) {
+    // Load all thoughts from prefs
+    List<Thought> thoughts = customThoughtsJson.map((json) {
       final Map<String, dynamic> data = jsonDecode(json);
-      final thought = Thought(
+      return Thought(
         name: data['name'],
         icon: IconData(
           data['iconCodePoint'],
           fontFamily: data['iconFontFamily'],
         ),
         prompt: data['prompt'],
+        color: Color(data['colorValue']),
       );
-      final existingIndex = thoughts.indexWhere((t) => t.name == thought.name);
-      if (existingIndex != -1) {
-        thoughts[existingIndex] = thought;
-      } else {
-        thoughts.add(thought);
-      }
-    }
+    }).toList();
 
     return thoughts;
   }
@@ -106,6 +130,7 @@ class EmotionService {
       'iconCodePoint': feeling.icon.codePoint,
       'iconFontFamily': feeling.icon.fontFamily,
       'prompt': feeling.prompt,
+      'colorValue': feeling.color.value,
     };
 
     // Remove existing if present
@@ -128,6 +153,7 @@ class EmotionService {
       'iconCodePoint': need.icon.codePoint,
       'iconFontFamily': need.icon.fontFamily,
       'prompt': need.prompt,
+      'colorValue': need.color.value,
     };
 
     customNeeds.removeWhere((json) {
@@ -149,6 +175,7 @@ class EmotionService {
       'iconCodePoint': thought.icon.codePoint,
       'iconFontFamily': thought.icon.fontFamily,
       'prompt': thought.prompt,
+      'colorValue': thought.color.value,
     };
 
     customThoughts.removeWhere((json) {
@@ -199,11 +226,13 @@ class EmotionService {
     await prefs.setStringList(_thoughtsKey, customThoughts);
   }
 
-  // Update a feeling (name and prompt)
+  // Update a feeling (name, prompt, icon, color)
   static Future<void> updateFeeling(
     String oldName,
     String newName,
     String newPrompt,
+    IconData newIcon,
+    Color newColor,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final customFeelings = prefs.getStringList(_feelingsKey) ?? [];
@@ -213,6 +242,9 @@ class EmotionService {
       if (data['name'] == oldName) {
         data['name'] = newName;
         data['prompt'] = newPrompt;
+        data['iconCodePoint'] = newIcon.codePoint;
+        data['iconFontFamily'] = newIcon.fontFamily;
+        data['colorValue'] = newColor.value;
         customFeelings[i] = jsonEncode(data);
         break;
       }
@@ -221,11 +253,13 @@ class EmotionService {
     await prefs.setStringList(_feelingsKey, customFeelings);
   }
 
-  // Update a need (name and prompt)
+  // Update a need (name, prompt, icon, color)
   static Future<void> updateNeed(
     String oldName,
     String newName,
     String newPrompt,
+    IconData newIcon,
+    Color newColor,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final customNeeds = prefs.getStringList(_needsKey) ?? [];
@@ -235,6 +269,9 @@ class EmotionService {
       if (data['name'] == oldName) {
         data['name'] = newName;
         data['prompt'] = newPrompt;
+        data['iconCodePoint'] = newIcon.codePoint;
+        data['iconFontFamily'] = newIcon.fontFamily;
+        data['colorValue'] = newColor.value;
         customNeeds[i] = jsonEncode(data);
         break;
       }
@@ -243,11 +280,13 @@ class EmotionService {
     await prefs.setStringList(_needsKey, customNeeds);
   }
 
-  // Update a thought (name and prompt)
+  // Update a thought (name, prompt, icon, color)
   static Future<void> updateThought(
     String oldName,
     String newName,
     String newPrompt,
+    IconData newIcon,
+    Color newColor,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final customThoughts = prefs.getStringList(_thoughtsKey) ?? [];
@@ -257,6 +296,9 @@ class EmotionService {
       if (data['name'] == oldName) {
         data['name'] = newName;
         data['prompt'] = newPrompt;
+        data['iconCodePoint'] = newIcon.codePoint;
+        data['iconFontFamily'] = newIcon.fontFamily;
+        data['colorValue'] = newColor.value;
         customThoughts[i] = jsonEncode(data);
         break;
       }

@@ -1,10 +1,6 @@
-# TODO: Add Edit Functionality for Emotions
-
-## Steps to Complete
-
-- [x] Add shared_preferences dependency to pubspec.yaml (already present)
-- [x] Create emotion_service.dart to manage persistent data for feelings, needs, thoughts
-- [x] Modify sample_data.dart to provide initial data only
-- [x] Update feeling_selection_screen.dart to load data from emotion_service instead of static lists
-- [x] Add edit functionality in the dialog: button to open edit form, save changes to service
-- [x] Test the app: verify data loads, edits persist, and UI updates correctly
+- Update models/feeling.dart to include Color color in Feeling, Need, Thought classes
+- Update data/sample_data.dart to add colors to sampleFeelings, sampleNeeds, sampleThoughts
+- Update services/emotion_service.dart to handle color in save/load methods and initialize with defaults if not present
+- Update screens/feeling_selection_screen.dart to add a FAB for creating new items, and a new create dialog with icon selection from existing icons and color picker
+- Simplify edit dialog to always allow editing since all items are now stored in prefs
+- Test the creation functionality

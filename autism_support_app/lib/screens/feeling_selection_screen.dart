@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../data/sample_data.dart';
 import '../services/favorites_service.dart';
 import '../services/emotion_service.dart';
@@ -89,168 +90,252 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
       isCustom = await EmotionService.isCustomThought(item.name);
     }
 
+    IconData selectedIcon = item.icon;
+    Color selectedColor = item.color;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.0),
-        ),
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.25,
-          height: MediaQuery.of(context).size.height * 0.45,
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.0),
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade100, Colors.pink.shade100],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.4,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                gradient: LinearGradient(
+                  colors: [Colors.purple.shade100, Colors.pink.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Edit ${item.name}',
-                  style: GoogleFonts.quicksand(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple.shade800,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameController,
-                  readOnly: !isCustom,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    labelStyle: GoogleFonts.quicksand(),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Edit ${item.name}',
+                    style: GoogleFonts.quicksand(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade800,
                     ),
                   ),
-                  style: GoogleFonts.quicksand(),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: promptController,
-                  decoration: InputDecoration(
-                    labelText: 'Prompt',
-                    labelStyle: GoogleFonts.quicksand(),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  style: GoogleFonts.quicksand(),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.quicksand(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    readOnly: !isCustom,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      labelStyle: GoogleFonts.quicksand(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        final newName = nameController.text.trim();
-                        final newPrompt = promptController.text.trim();
-                        if (newName.isNotEmpty && newPrompt.isNotEmpty) {
-                          if (item is Feeling) {
-                            if (isCustom) {
+                    style: GoogleFonts.quicksand(),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: promptController,
+                    decoration: InputDecoration(
+                      labelText: 'Prompt',
+                      labelStyle: GoogleFonts.quicksand(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    style: GoogleFonts.quicksand(),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text('Icon: ', style: GoogleFonts.quicksand()),
+                      IconButton(
+                        icon: Icon(selectedIcon, color: selectedColor),
+                        onPressed: () async {
+                          final icons = [
+                            Icons.sentiment_satisfied,
+                            Icons.sentiment_dissatisfied,
+                            Icons.sentiment_neutral,
+                            Icons.celebration,
+                            Icons.bedtime,
+                            Icons.error_outline,
+                            Icons.warning,
+                            Icons.spa,
+                            Icons.blur_on,
+                            Icons.person_off,
+                            Icons.emoji_events,
+                            Icons.local_drink,
+                            Icons.restaurant,
+                            Icons.hotel,
+                            Icons.help,
+                            Icons.favorite,
+                            Icons.volume_off,
+                            Icons.wc,
+                            Icons.medical_services,
+                            Icons.chair,
+                            Icons.visibility,
+                            Icons.space_bar,
+                            Icons.chat,
+                            Icons.help_outline,
+                            Icons.lightbulb,
+                            Icons.memory,
+                            Icons.lightbulb_outline,
+                            Icons.question_mark,
+                            Icons.cancel,
+                            Icons.check_circle,
+                            Icons.cloud,
+                            Icons.schedule,
+                            Icons.star,
+                            Icons.info,
+                          ];
+                          final selected = await showDialog<IconData>(
+                            context: context,
+                            builder: (context) => Dialog(
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: GridView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 6,
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
+                                  ),
+                                  itemCount: icons.length,
+                                  itemBuilder: (context, index) => IconButton(
+                                    icon: Icon(icons[index], color: selectedColor),
+                                    onPressed: () => Navigator.of(context).pop(icons[index]),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                          if (selected != null) {
+                            setState(() => selectedIcon = selected);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      Text('Color: ', style: GoogleFonts.quicksand()),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Pick a color', style: GoogleFonts.quicksand()),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: selectedColor,
+                                  onColorChanged: (color) => setState(() => selectedColor = color),
+                                ),
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  child: Text('Done', style: GoogleFonts.quicksand()),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: selectedColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final newName = nameController.text.trim();
+                          final newPrompt = promptController.text.trim();
+                          if (newName.isNotEmpty && newPrompt.isNotEmpty) {
+                            if (item is Feeling) {
                               await EmotionService.updateFeeling(
                                 item.name,
                                 newName,
                                 newPrompt,
+                                selectedIcon,
+                                selectedColor,
                               );
-                            } else {
-                              await EmotionService.saveFeeling(
-                                Feeling(
-                                  name: item
-                                      .name, // Keep original name for defaults
-                                  icon: item.icon,
-                                  prompt: newPrompt,
-                                ),
-                              );
-                            }
-                          } else if (item is Need) {
-                            if (isCustom) {
+                            } else if (item is Need) {
                               await EmotionService.updateNeed(
                                 item.name,
                                 newName,
                                 newPrompt,
+                                selectedIcon,
+                                selectedColor,
                               );
-                            } else {
-                              await EmotionService.saveNeed(
-                                Need(
-                                  name: item
-                                      .name, // Keep original name for defaults
-                                  icon: item.icon,
-                                  prompt: newPrompt,
-                                ),
-                              );
-                            }
-                          } else if (item is Thought) {
-                            if (isCustom) {
+                            } else if (item is Thought) {
                               await EmotionService.updateThought(
                                 item.name,
                                 newName,
                                 newPrompt,
-                              );
-                            } else {
-                              await EmotionService.saveThought(
-                                Thought(
-                                  name: item
-                                      .name, // Keep original name for defaults
-                                  icon: item.icon,
-                                  prompt: newPrompt,
-                                ),
+                                selectedIcon,
+                                selectedColor,
                               );
                             }
+                            await _loadData();
+                            Navigator.of(context).pop();
                           }
-                          await _loadData();
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                      ),
-                      child: Text(
-                        'Save',
-                        style: GoogleFonts.quicksand(
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          'Save',
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -334,6 +419,287 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
     }
   }
 
+  void _showCreateDialog(BuildContext context) {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController promptController = TextEditingController();
+    IconData selectedIcon = Icons.sentiment_satisfied;
+    Color selectedColor = Colors.blue;
+    String selectedType = 'Feeling';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.6,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Container(
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                gradient: LinearGradient(
+                  colors: [Colors.purple.shade100, Colors.pink.shade100],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Create New Item',
+                    style: GoogleFonts.quicksand(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    items: ['Feeling', 'Need', 'Thought']
+                        .map((type) => DropdownMenuItem(
+                              value: type,
+                              child: Text(type, style: GoogleFonts.quicksand()),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => selectedType = value);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Type',
+                      labelStyle: GoogleFonts.quicksand(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      labelStyle: GoogleFonts.quicksand(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    style: GoogleFonts.quicksand(),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: promptController,
+                    decoration: InputDecoration(
+                      labelText: 'Prompt',
+                      labelStyle: GoogleFonts.quicksand(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                    ),
+                    style: GoogleFonts.quicksand(),
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Text('Icon: ', style: GoogleFonts.quicksand()),
+                      IconButton(
+                        icon: Icon(selectedIcon, color: selectedColor),
+                        onPressed: () async {
+                          final icons = [
+                            Icons.sentiment_satisfied,
+                            Icons.sentiment_dissatisfied,
+                            Icons.sentiment_neutral,
+                            Icons.celebration,
+                            Icons.bedtime,
+                            Icons.error_outline,
+                            Icons.warning,
+                            Icons.spa,
+                            Icons.blur_on,
+                            Icons.person_off,
+                            Icons.emoji_events,
+                            Icons.local_drink,
+                            Icons.restaurant,
+                            Icons.hotel,
+                            Icons.help,
+                            Icons.favorite,
+                            Icons.volume_off,
+                            Icons.wc,
+                            Icons.medical_services,
+                            Icons.chair,
+                            Icons.visibility,
+                            Icons.space_bar,
+                            Icons.chat,
+                            Icons.help_outline,
+                            Icons.lightbulb,
+                            Icons.memory,
+                            Icons.lightbulb_outline,
+                            Icons.question_mark,
+                            Icons.cancel,
+                            Icons.check_circle,
+                            Icons.cloud,
+                            Icons.schedule,
+                            Icons.star,
+                            Icons.info,
+                          ];
+                          final selected = await showDialog<IconData>(
+                            context: context,
+                            builder: (context) => Dialog(
+                              child: SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.8,
+                                height: MediaQuery.of(context).size.height * 0.6,
+                                child: GridView.builder(
+                                  padding: const EdgeInsets.all(16),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 6,
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
+                                  ),
+                                  itemCount: icons.length,
+                                  itemBuilder: (context, index) => IconButton(
+                                    icon: Icon(icons[index], color: selectedColor),
+                                    onPressed: () => Navigator.of(context).pop(icons[index]),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                          if (selected != null) {
+                            setState(() => selectedIcon = selected);
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      Text('Color: ', style: GoogleFonts.quicksand()),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Pick a color', style: GoogleFonts.quicksand()),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: selectedColor,
+                                  onColorChanged: (color) => setState(() => selectedColor = color),
+                                ),
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  child: Text('Done', style: GoogleFonts.quicksand()),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: selectedColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.black),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final name = nameController.text.trim();
+                          final prompt = promptController.text.trim();
+                          if (name.isNotEmpty && prompt.isNotEmpty) {
+                            if (selectedType == 'Feeling') {
+                              await EmotionService.saveFeeling(
+                                Feeling(
+                                  name: name,
+                                  icon: selectedIcon,
+                                  prompt: prompt,
+                                  color: selectedColor,
+                                ),
+                              );
+                            } else if (selectedType == 'Need') {
+                              await EmotionService.saveNeed(
+                                Need(
+                                  name: name,
+                                  icon: selectedIcon,
+                                  prompt: prompt,
+                                  color: selectedColor,
+                                ),
+                              );
+                            } else if (selectedType == 'Thought') {
+                              await EmotionService.saveThought(
+                                Thought(
+                                  name: name,
+                                  icon: selectedIcon,
+                                  prompt: prompt,
+                                  color: selectedColor,
+                                ),
+                              );
+                            }
+                            await _loadData();
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                        ),
+                        child: Text(
+                          'Create',
+                          style: GoogleFonts.quicksand(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -371,6 +737,11 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
           ),
           tabs: _categories.map((category) => Tab(text: category)).toList(),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCreateDialog(context),
+        backgroundColor: Colors.purple,
+        child: const Icon(Icons.add),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -540,9 +911,7 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                               0.1
                                         : MediaQuery.of(context).size.width *
                                               0.15,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
+                                    color: item.color,
                                   ),
                                 ),
                               ),

@@ -37,6 +37,7 @@ dependencies:
   provider: ^6.0.5 # For state management if needed later
   google_fonts: ^6.1.0 # For prettier fonts
   shared_preferences: ^2.2.2 # For storing favorites locally
+  flutter_colorpicker: ^1.0.3 # For color picker in creation dialog
 
 dev_dependencies:
   flutter_test:
