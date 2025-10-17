@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/feeling_selection_screen.dart';
 import 'screens/calm_tips_screen.dart';
 import 'screens/water_tracker_screen.dart';
+import 'screens/notes_screen.dart';
 
 void main() {
   runApp(const UnspokenApp());
@@ -172,6 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     FeelingSelectionScreen(),
     CalmTipsScreen(),
     WaterTrackerScreen(),
+    NotesScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -238,6 +240,16 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.local_drink),
             label: Text(
               'Water Tracker',
+              style: GoogleFonts.quicksand(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ).data,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.note),
+            label: Text(
+              'Notes',
               style: GoogleFonts.quicksand(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

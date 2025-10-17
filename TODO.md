@@ -1,6 +1,10 @@
-- Update models/feeling.dart to include Color color in Feeling, Need, Thought classes
-- Update data/sample_data.dart to add colors to sampleFeelings, sampleNeeds, sampleThoughts
-- Update services/emotion_service.dart to handle color in save/load methods and initialize with defaults if not present
-- Update screens/feeling_selection_screen.dart to add a FAB for creating new items, and a new create dialog with icon selection from existing icons and color picker
-- Simplify edit dialog to always allow editing since all items are now stored in prefs
-- Test the creation functionality
+# TODO: Add Notes Tab to Flutter App
+
+## Tasks
+
+- [x] Create Note model in models/note.dart
+- [x] Create NotesService in services/notes_service.dart
+- [x] Create NotesScreen in screens/notes_screen.dart
+- [x] Create NoteDetailScreen in screens/note_detail_screen.dart
+- [x] Update main.dart to add Notes tab to bottom navigation
+- [x] Test the new notes functionality
