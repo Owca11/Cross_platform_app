@@ -11,11 +11,12 @@ class NotesScreen extends StatefulWidget {
   State<NotesScreen> createState() => _NotesScreenState();
 }
 
-class _NotesScreenState extends State<NotesScreen> {
+class _NotesScreenState extends State<NotesScreen>
+    with SingleTickerProviderStateMixin {
   final NotesService _notesService = NotesService();
   List<Note> _notes = [];
   bool _isLoading = true;
-  String _selectedCategory = 'All';
+  late TabController _tabController;
 
   final List<String> _categories = [
     'All',
@@ -34,7 +35,14 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _categories.length, vsync: this);
     _loadNotes();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadNotes() async {
@@ -46,9 +54,9 @@ class _NotesScreenState extends State<NotesScreen> {
     });
   }
 
-  List<Note> get _filteredNotes {
-    if (_selectedCategory == 'All') return _notes;
-    return _notes.where((note) => note.category == _selectedCategory).toList();
+  List<Note> _getFilteredNotes(String category) {
+    if (category == 'All') return _notes;
+    return _notes.where((note) => note.category == category).toList();
   }
 
   void _addNote() {
@@ -110,7 +118,7 @@ class _NotesScreenState extends State<NotesScreen> {
         title: Text(
           'My Notes',
           style: GoogleFonts.quicksand(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -124,7 +132,22 @@ class _NotesScreenState extends State<NotesScreen> {
             ),
           ),
         ),
-        actions: [],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: GoogleFonts.quicksand(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: GoogleFonts.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          tabs: _categories.map((category) => Tab(text: category)).toList(),
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -136,69 +159,58 @@ class _NotesScreenState extends State<NotesScreen> {
         ),
         child: Stack(
           children: [
-            Column(
-              children: [
-                // Category filter
-                Container(
-                  padding: EdgeInsets.all(16),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: InputDecoration(
-                      labelText: 'Filter by Category',
-                      border: OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.8),
-                    ),
-                    items: _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value!;
-                      });
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: _isLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : _filteredNotes.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '🌸 No notes yet 🌸',
-                                style: GoogleFonts.quicksand(
-                                  fontSize: 24,
-                                  color: Colors.purple.shade300,
-                                ),
+            TabBarView(
+              controller: _tabController,
+              children: _categories.map((category) {
+                final filteredNotes = _getFilteredNotes(category);
+                return _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : filteredNotes.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '🌸 No notes yet 🌸',
+                              style: GoogleFonts.quicksand(
+                                fontSize: 24,
+                                color: Colors.purple.shade300,
                               ),
-                              SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: _addNote,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.purple.shade300,
-                                  foregroundColor: Colors.white,
-                                ),
-                                child: Text('Create Your First Note'),
+                            ),
+                            SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _addNote,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple.shade300,
+                                foregroundColor: Colors.white,
                               ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: EdgeInsets.all(16),
-                          itemCount: _filteredNotes.length,
-                          itemBuilder: (context, index) {
-                            final note = _filteredNotes[index];
-                            return Card(
-                              margin: EdgeInsets.only(bottom: 12),
-                              color: Colors.pink.shade50,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                              child: Text('Create Your First Note'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.all(16),
+                        itemCount: filteredNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = filteredNotes[index];
+                          return Card(
+                            margin: EdgeInsets.only(bottom: 16.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            elevation: 4,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15.0),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.7),
+                                    Colors.purple.shade50,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                               ),
                               child: ExpansionTile(
                                 title: Row(
@@ -216,9 +228,9 @@ class _NotesScreenState extends State<NotesScreen> {
                                       child: Text(
                                         note.title,
                                         style: GoogleFonts.quicksand(
+                                          fontWeight: FontWeight.bold,
                                           fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.purple.shade700,
+                                          color: Colors.purple.shade800,
                                         ),
                                       ),
                                     ),
@@ -238,28 +250,48 @@ class _NotesScreenState extends State<NotesScreen> {
                                       children: [
                                         if (note.type == NoteType.shopping &&
                                             note.items.isNotEmpty)
-                                          ...note.items.map(
-                                            (item) => Padding(
+                                          ...note.items.asMap().entries.map((
+                                            entry,
+                                          ) {
+                                            final index = entry.key;
+                                            final item = entry.value;
+                                            return Padding(
                                               padding: EdgeInsets.only(
                                                 bottom: 4,
                                               ),
                                               child: Row(
                                                 children: [
-                                                  Icon(
-                                                    Icons
-                                                        .check_box_outline_blank,
-                                                    size: 16,
+                                                  Checkbox(
+                                                    value: note
+                                                        .completedItems[index],
+                                                    onChanged: (value) async {
+                                                      setState(() {
+                                                        note.completedItems[index] =
+                                                            value ?? false;
+                                                      });
+                                                      await _notesService
+                                                          .saveNote(note);
+                                                    },
+                                                    activeColor:
+                                                        Colors.purple.shade300,
                                                   ),
                                                   SizedBox(width: 8),
-                                                  Text(
-                                                    item,
-                                                    style:
-                                                        GoogleFonts.quicksand(),
+                                                  Expanded(
+                                                    child: Text(
+                                                      item,
+                                                      style: GoogleFonts.quicksand(
+                                                        decoration:
+                                                            note.completedItems[index]
+                                                            ? TextDecoration
+                                                                  .lineThrough
+                                                            : null,
+                                                      ),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                          ),
+                                            );
+                                          }),
                                         if (note.content.isNotEmpty)
                                           Text(
                                             note.content,
@@ -280,11 +312,14 @@ class _NotesScreenState extends State<NotesScreen> {
                                                   BorderRadius.circular(8),
                                               color: Colors.white,
                                             ),
-                                            child: CustomPaint(
-                                              painter: DrawingPainter(
-                                                note.drawingData,
+                                            child: Center(
+                                              child: Text(
+                                                'Drawing Note - Tap to Edit',
+                                                style: GoogleFonts.quicksand(
+                                                  fontSize: 16,
+                                                  color: Colors.purple.shade300,
+                                                ),
                                               ),
-                                              size: Size.infinite,
                                             ),
                                           ),
                                         SizedBox(height: 12),
@@ -316,11 +351,11 @@ class _NotesScreenState extends State<NotesScreen> {
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
+                            ),
+                          );
+                        },
+                      );
+              }).toList(),
             ),
             // Add note button in bottom right corner
             Positioned(
@@ -328,8 +363,8 @@ class _NotesScreenState extends State<NotesScreen> {
               right: 16,
               child: FloatingActionButton(
                 onPressed: _addNote,
-                backgroundColor: Colors.purple.shade300,
-                child: Icon(Icons.add, color: Colors.white),
+                backgroundColor: Colors.pink.shade300,
+                child: Text('🌸', style: TextStyle(fontSize: 24)),
               ),
             ),
           ],
@@ -353,21 +388,24 @@ class _NotesScreenState extends State<NotesScreen> {
 }
 
 class DrawingPainter extends CustomPainter {
-  final List<List<Offset>> strokes;
+  final List<Map<String, dynamic>> strokes;
+  final Color defaultColor;
 
-  DrawingPainter(this.strokes);
+  DrawingPainter(this.strokes, this.defaultColor);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3.0
-      ..strokeCap = StrokeCap.round;
-
     for (final stroke in strokes) {
-      for (int i = 0; i < stroke.length - 1; i++) {
-        if (stroke[i] != null && stroke[i + 1] != null) {
-          canvas.drawLine(stroke[i], stroke[i + 1], paint);
+      final points = stroke['points'] as List<Offset>;
+      final colorValue = stroke['color'] as int?;
+      final paint = Paint()
+        ..color = colorValue != null ? Color(colorValue) : defaultColor
+        ..strokeWidth = 3.0
+        ..strokeCap = StrokeCap.round;
+
+      for (int i = 0; i < points.length - 1; i++) {
+        if (points[i] != null && points[i + 1] != null) {
+          canvas.drawLine(points[i], points[i + 1], paint);
         }
       }
     }

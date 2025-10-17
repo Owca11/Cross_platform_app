@@ -9,16 +9,25 @@ class WaterTrackerScreen extends StatefulWidget {
   State<WaterTrackerScreen> createState() => _WaterTrackerScreenState();
 }
 
-class _WaterTrackerScreenState extends State<WaterTrackerScreen> {
+class _WaterTrackerScreenState extends State<WaterTrackerScreen>
+    with SingleTickerProviderStateMixin {
   double _currentIntake = 0.0;
   double _dailyGoal = WaterTrackerService.defaultDailyGoal;
   bool _isGlassMode = true; // true for glasses, false for ml
   final TextEditingController _customAmountController = TextEditingController();
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 1, vsync: this);
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -74,6 +83,21 @@ class _WaterTrackerScreenState extends State<WaterTrackerScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
+          ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [Tab(text: 'Tracker')],
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: GoogleFonts.quicksand(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: GoogleFonts.quicksand(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
         ),
         actions: [

@@ -9,10 +9,12 @@ class Note {
   NoteType type;
   Color color;
   List<String> items; // For shopping lists
+  List<bool> completedItems; // For shopping lists, tracks completion status
   DateTime createdAt;
   DateTime? reminderDate; // For reminders
   String category; // New: category for organization
-  List<List<Offset>> drawingData; // New: for drawing notes
+  List<Map<String, dynamic>>
+  drawingData; // New: for drawing notes, each map has 'points' and 'color'
 
   Note({
     required this.id,
@@ -21,6 +23,7 @@ class Note {
     required this.type,
     required this.color,
     this.items = const [],
+    this.completedItems = const [],
     DateTime? createdAt,
     this.reminderDate,
     this.category = 'General', // Default category
@@ -35,16 +38,19 @@ class Note {
       'type': type.index,
       'color': color.value,
       'items': items,
+      'completedItems': completedItems,
       'createdAt': createdAt.toIso8601String(),
       'reminderDate': reminderDate?.toIso8601String(),
       'category': category,
-      'drawingData': drawingData
-          .map(
-            (stroke) => stroke
-                .map((offset) => {'dx': offset.dx, 'dy': offset.dy})
-                .toList(),
-          )
-          .toList(),
+      'drawingData': drawingData.map((stroke) {
+        return {
+          'points': (stroke['points'] as List<Offset>)
+              .map((offset) => {'dx': offset.dx, 'dy': offset.dy})
+              .toList(),
+          'color': stroke['color'],
+          'strokeWidth': stroke['strokeWidth'] ?? 3.0,
+        };
+      }).toList(),
     };
   }
 
@@ -56,19 +62,40 @@ class Note {
       type: NoteType.values[json['type']],
       color: Color(json['color']),
       items: List<String>.from(json['items'] ?? []),
+      completedItems: List<bool>.from(json['completedItems'] ?? []),
       createdAt: DateTime.parse(json['createdAt']),
       reminderDate: json['reminderDate'] != null
           ? DateTime.parse(json['reminderDate'])
           : null,
       category: json['category'] ?? 'General',
       drawingData:
-          (json['drawingData'] as List<dynamic>?)
-              ?.map(
-                (stroke) => (stroke as List<dynamic>)
-                    .map((point) => Offset(point['dx'], point['dy']))
+          (json['drawingData'] as List<dynamic>?)?.map((stroke) {
+            if (stroke is List) {
+              // old format: List<Offset>
+              return {
+                'points': (stroke as List)
+                    .map((point) => point as Offset)
                     .toList(),
-              )
-              .toList() ??
+                'color': null,
+              };
+            } else if (stroke is Map<String, dynamic>) {
+              // new format
+              return {
+                'points': (stroke['points'] as List<dynamic>)
+                    .map(
+                      (point) => Offset(
+                        (point['dx'] as num).toDouble(),
+                        (point['dy'] as num).toDouble(),
+                      ),
+                    )
+                    .toList(),
+                'color': stroke['color'],
+                'strokeWidth': stroke['strokeWidth'] ?? 3.0,
+              };
+            } else {
+              return {'points': <Offset>[], 'color': null};
+            }
+          }).toList() ??
           [],
     );
   }

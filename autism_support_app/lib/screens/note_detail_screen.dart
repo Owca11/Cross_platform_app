@@ -19,10 +19,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late NoteType _selectedType;
   late Color _selectedColor;
   late List<String> _items;
+  late List<bool> _completedItems;
   late TextEditingController _itemController;
   late String _selectedCategory;
-  late List<List<Offset>> _drawingData;
+  late List<Map<String, dynamic>> _drawingData;
   late Color _drawingColor;
+  late bool _isErasing;
+  late Color _currentColor;
+  late double _strokeWidth;
 
   final List<String> _categories = [
     'General',
@@ -47,10 +51,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _selectedType = widget.note?.type ?? NoteType.text;
     _selectedColor = widget.note?.color ?? Colors.purple.shade300;
     _items = List.from(widget.note?.items ?? []);
+    _completedItems = List.from(widget.note?.completedItems ?? []);
     _itemController = TextEditingController();
     _selectedCategory = widget.note?.category ?? 'General';
     _drawingData = List.from(widget.note?.drawingData ?? []);
     _drawingColor = Colors.black; // Default drawing color
+    _isErasing = false;
+    _currentColor = _drawingColor;
+    _strokeWidth = 3.0; // Default stroke width
   }
 
   @override
@@ -76,6 +84,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       type: _selectedType,
       color: _selectedColor,
       items: _items,
+      completedItems: _completedItems,
       category: _selectedCategory,
       drawingData: _drawingData,
     );
@@ -88,6 +97,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     if (_itemController.text.trim().isNotEmpty) {
       setState(() {
         _items.add(_itemController.text.trim());
+        _completedItems.add(false);
         _itemController.clear();
       });
     }
@@ -96,6 +106,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   void _removeItem(int index) {
     setState(() {
       _items.removeAt(index);
+      _completedItems.removeAt(index);
     });
   }
 
@@ -135,6 +146,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             onColorChanged: (color) {
               setState(() {
                 _drawingColor = color;
+                if (!_isErasing) {
+                  _currentColor = _drawingColor;
+                }
               });
             },
           ),
@@ -207,6 +221,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         actions: [],
       ),
       body: Container(
+        height: MediaQuery.of(context).size.height,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.purple.shade50, Colors.pink.shade50],
@@ -303,14 +318,64 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
                   // Drawing color picker (only for drawing type)
                   if (_selectedType == NoteType.drawing) ...[
-                    ElevatedButton.icon(
-                      onPressed: _pickDrawingColor,
-                      icon: Icon(Icons.color_lens),
-                      label: Text('Pick Drawing Color'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _drawingColor,
-                        foregroundColor: Colors.white,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _pickDrawingColor,
+                            icon: Icon(Icons.color_lens),
+                            label: Text('Pick Drawing Color'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _drawingColor,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _isErasing = !_isErasing;
+                                _currentColor = _isErasing
+                                    ? Colors.white
+                                    : _drawingColor;
+                              });
+                            },
+                            icon: Icon(
+                              _isErasing ? Icons.edit : Icons.cleaning_services,
+                            ),
+                            label: Text(_isErasing ? 'Draw' : 'Erase'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _isErasing
+                                  ? Colors.red.shade300
+                                  : Colors.blue.shade300,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    // Stroke width slider
+                    Text(
+                      'Stroke Width: ${_strokeWidth.toStringAsFixed(1)}',
+                      style: GoogleFonts.quicksand(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                    Slider(
+                      value: _strokeWidth,
+                      min: 1.0,
+                      max: 10.0,
+                      divisions: 9,
+                      label: _strokeWidth.toStringAsFixed(1),
+                      onChanged: (value) {
+                        setState(() {
+                          _strokeWidth = value;
+                        });
+                      },
                     ),
                     SizedBox(height: 16),
                   ],
@@ -326,7 +391,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     ),
                     SizedBox(height: 8),
                     Container(
-                      height: 300,
+                      height: MediaQuery.of(context).size.height * 0.45,
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.grey.shade300),
                         borderRadius: BorderRadius.circular(8),
@@ -336,13 +401,29 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         child: GestureDetector(
                           onPanStart: (details) {
                             setState(() {
-                              _drawingData.add([details.localPosition]);
+                              _drawingData.add({
+                                'points': [details.localPosition],
+                                'color': _currentColor.value,
+                                'strokeWidth': _strokeWidth,
+                              });
                             });
                           },
                           onPanUpdate: (details) {
                             setState(() {
                               if (_drawingData.isNotEmpty) {
-                                _drawingData.last.add(details.localPosition);
+                                // Clamp the position to the drawing area bounds
+                                final clampedPosition = Offset(
+                                  details.localPosition.dx.clamp(
+                                    0.0,
+                                    MediaQuery.of(context).size.width - 32,
+                                  ),
+                                  details.localPosition.dy.clamp(
+                                    0.0,
+                                    MediaQuery.of(context).size.height * 0.45,
+                                  ),
+                                );
+                                (_drawingData.last['points'] as List<Offset>)
+                                    .add(clampedPosition);
                               }
                             });
                           },
@@ -401,7 +482,22 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     SizedBox(height: 8),
                     ..._items.asMap().entries.map(
                       (entry) => ListTile(
-                        title: Text(entry.value),
+                        leading: Checkbox(
+                          value: _completedItems[entry.key],
+                          onChanged: (value) {
+                            setState(() {
+                              _completedItems[entry.key] = value ?? false;
+                            });
+                          },
+                        ),
+                        title: Text(
+                          entry.value,
+                          style: TextStyle(
+                            decoration: _completedItems[entry.key]
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _removeItem(entry.key),
@@ -438,10 +534,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             Positioned(
               bottom: 16,
               right: 16,
-              child: FloatingActionButton(
+              child: ElevatedButton.icon(
                 onPressed: _saveNote,
-                backgroundColor: Colors.pink.shade300,
-                child: Text('🌸', style: TextStyle(fontSize: 24)),
+                icon: Icon(Icons.save),
+                label: Text('Save Note'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink.shade300,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
               ),
             ),
           ],
@@ -452,22 +556,25 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 }
 
 class DrawingPainter extends CustomPainter {
-  final List<List<Offset>> strokes;
-  final Color color;
+  final List<Map<String, dynamic>> strokes;
+  final Color defaultColor;
 
-  DrawingPainter(this.strokes, this.color);
+  DrawingPainter(this.strokes, this.defaultColor);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 3.0
-      ..strokeCap = StrokeCap.round;
-
     for (final stroke in strokes) {
-      for (int i = 0; i < stroke.length - 1; i++) {
-        if (stroke[i] != null && stroke[i + 1] != null) {
-          canvas.drawLine(stroke[i], stroke[i + 1], paint);
+      final points = stroke['points'] as List<Offset>;
+      final colorValue = stroke['color'] as int?;
+      final strokeWidth = stroke['strokeWidth'] as double? ?? 3.0;
+      final paint = Paint()
+        ..color = colorValue != null ? Color(colorValue) : defaultColor
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+
+      for (int i = 0; i < points.length - 1; i++) {
+        if (points[i] != null && points[i + 1] != null) {
+          canvas.drawLine(points[i], points[i + 1], paint);
         }
       }
     }
