@@ -1,4 +1,4 @@
-flutterimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
@@ -22,6 +22,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _itemController;
   late String _selectedCategory;
   late List<List<Offset>> _drawingData;
+  late Color _drawingColor;
 
   final List<String> _categories = [
     'General',
@@ -49,6 +50,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _itemController = TextEditingController();
     _selectedCategory = widget.note?.category ?? 'General';
     _drawingData = List.from(widget.note?.drawingData ?? []);
+    _drawingColor = Colors.black; // Default drawing color
   }
 
   @override
@@ -108,6 +110,31 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
             onColorChanged: (color) {
               setState(() {
                 _selectedColor = color;
+              });
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _pickDrawingColor() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pick drawing color'),
+        content: SingleChildScrollView(
+          child: ColorPicker(
+            pickerColor: _drawingColor,
+            onColorChanged: (color) {
+              setState(() {
+                _drawingColor = color;
               });
             },
           ),
@@ -274,6 +301,20 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                   ),
                   SizedBox(height: 16),
 
+                  // Drawing color picker (only for drawing type)
+                  if (_selectedType == NoteType.drawing) ...[
+                    ElevatedButton.icon(
+                      onPressed: _pickDrawingColor,
+                      icon: Icon(Icons.color_lens),
+                      label: Text('Pick Drawing Color'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _drawingColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+
                   // Content based on type
                   if (_selectedType == NoteType.drawing) ...[
                     Text(
@@ -309,7 +350,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             // Stroke ended, no need to add anything
                           },
                           child: CustomPaint(
-                            painter: DrawingPainter(_drawingData),
+                            painter: DrawingPainter(
+                              _drawingData,
+                              _drawingColor,
+                            ),
                             size: Size.infinite,
                           ),
                         ),
@@ -409,13 +453,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
 class DrawingPainter extends CustomPainter {
   final List<List<Offset>> strokes;
+  final Color color;
 
-  DrawingPainter(this.strokes);
+  DrawingPainter(this.strokes, this.color);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black
+      ..color = color
       ..strokeWidth = 3.0
       ..strokeCap = StrokeCap.round;
 

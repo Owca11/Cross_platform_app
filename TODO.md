@@ -1,10 +1,8 @@
-# TODO: Add Notes Tab to Flutter App
+# TODO: Improve Drawing Notes Functionality
 
 ## Tasks
 
-- [x] Create Note model in models/note.dart
-- [x] Create NotesService in services/notes_service.dart
-- [x] Create NotesScreen in screens/notes_screen.dart
-- [x] Create NoteDetailScreen in screens/note_detail_screen.dart
-- [x] Update main.dart to add Notes tab to bottom navigation
-- [x] Test the new notes functionality
+- [ ] Add color picker for drawing: Introduce a `_drawingColor` variable (default black), add a color picker button next to the drawing area, and update `DrawingPainter` to use this color in `note_detail_screen.dart`.
+- [ ] Make note backgrounds lighter: Change card color in `notes_screen.dart` from `Colors.pink.shade50` to `Colors.white.withOpacity(0.7)` for a lighter appearance.
+- [ ] Fix drawing save/display: Clip drawing positions to the container bounds (0 to 300 height) during drawing in `note_detail_screen.dart`, and ensure the display in `notes_screen.dart` also clips to prevent overflow.
+- [ ] Change save button: Replace the flower emoji with `Icon(Icons.save)` in the FAB in `note_detail_screen.dart`.
