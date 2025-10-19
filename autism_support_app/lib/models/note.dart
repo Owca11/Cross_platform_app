@@ -73,9 +73,7 @@ class Note {
             if (stroke is List) {
               // old format: List<Offset>
               return {
-                'points': (stroke as List)
-                    .map((point) => point as Offset)
-                    .toList(),
+                'points': (stroke).map((point) => point as Offset).toList(),
                 'color': null,
               };
             } else if (stroke is Map<String, dynamic>) {

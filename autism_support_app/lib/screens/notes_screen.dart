@@ -404,7 +404,7 @@ class DrawingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       for (int i = 0; i < points.length - 1; i++) {
-        if (points[i] != null && points[i + 1] != null) {
+        if (points[i + 1] != null) {
           canvas.drawLine(points[i], points[i + 1], paint);
         }
       }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
@@ -257,7 +258,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: _selectedCategory,
+                          initialValue: _selectedCategory,
                           decoration: InputDecoration(
                             labelText: 'Category',
                             border: OutlineInputBorder(),
@@ -280,7 +281,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       SizedBox(width: 16),
                       Expanded(
                         child: DropdownButtonFormField<NoteType>(
-                          value: _selectedType,
+                          initialValue: _selectedType,
                           decoration: InputDecoration(
                             labelText: 'Type',
                             border: OutlineInputBorder(),
@@ -398,37 +399,54 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         color: Colors.white,
                       ),
                       child: ClipRect(
-                        child: GestureDetector(
-                          onPanStart: (details) {
-                            setState(() {
-                              _drawingData.add({
-                                'points': [details.localPosition],
-                                'color': _currentColor.value,
-                                'strokeWidth': _strokeWidth,
-                              });
-                            });
-                          },
-                          onPanUpdate: (details) {
-                            setState(() {
-                              if (_drawingData.isNotEmpty) {
-                                // Clamp the position to the drawing area bounds
-                                final clampedPosition = Offset(
-                                  details.localPosition.dx.clamp(
-                                    0.0,
-                                    MediaQuery.of(context).size.width - 32,
-                                  ),
-                                  details.localPosition.dy.clamp(
-                                    0.0,
-                                    MediaQuery.of(context).size.height * 0.45,
-                                  ),
-                                );
-                                (_drawingData.last['points'] as List<Offset>)
-                                    .add(clampedPosition);
-                              }
-                            });
-                          },
-                          onPanEnd: (details) {
-                            // Stroke ended, no need to add anything
+                        child: RawGestureDetector(
+                          gestures: {
+                            PanGestureRecognizer:
+                                GestureRecognizerFactoryWithHandlers<
+                                  PanGestureRecognizer
+                                >(() => PanGestureRecognizer(), (
+                                  PanGestureRecognizer instance,
+                                ) {
+                                  instance
+                                    ..onStart = (details) {
+                                      setState(() {
+                                        _drawingData.add({
+                                          'points': [details.localPosition],
+                                          'color': _currentColor.value,
+                                          'strokeWidth': _strokeWidth,
+                                        });
+                                      });
+                                    }
+                                    ..onUpdate = (details) {
+                                      setState(() {
+                                        if (_drawingData.isNotEmpty) {
+                                          // Clamp the position to the drawing area bounds
+                                          final clampedPosition = Offset(
+                                            details.localPosition.dx.clamp(
+                                              0.0,
+                                              MediaQuery.of(
+                                                    context,
+                                                  ).size.width -
+                                                  32,
+                                            ),
+                                            details.localPosition.dy.clamp(
+                                              0.0,
+                                              MediaQuery.of(
+                                                    context,
+                                                  ).size.height *
+                                                  0.45,
+                                            ),
+                                          );
+                                          (_drawingData.last['points']
+                                                  as List<Offset>)
+                                              .add(clampedPosition);
+                                        }
+                                      });
+                                    }
+                                    ..onEnd = (details) {
+                                      // Stroke ended, no need to add anything
+                                    };
+                                }),
                           },
                           child: CustomPaint(
                             painter: DrawingPainter(
@@ -573,7 +591,7 @@ class DrawingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       for (int i = 0; i < points.length - 1; i++) {
-        if (points[i] != null && points[i + 1] != null) {
+        if (points[i + 1] != null) {
           canvas.drawLine(points[i], points[i + 1], paint);
         }
       }

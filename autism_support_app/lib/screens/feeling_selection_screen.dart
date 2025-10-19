@@ -74,7 +74,11 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
     });
   }
 
-  void _showEditDialog(BuildContext context, dynamic item, Function(dynamic) onUpdated) async {
+  void _showEditDialog(
+    BuildContext context,
+    dynamic item,
+    Function(dynamic) onUpdated,
+  ) async {
     final TextEditingController nameController = TextEditingController(
       text: item.name,
     );
@@ -189,19 +193,24 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                             builder: (context) => Dialog(
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                height: MediaQuery.of(context).size.height * 0.6,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.6,
                                 child: GridView.builder(
                                   padding: const EdgeInsets.all(16),
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 6,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
-                                  ),
+                                        crossAxisCount: 6,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 8,
+                                      ),
                                   itemCount: icons.length,
                                   itemBuilder: (context, index) => IconButton(
-                                    icon: Icon(icons[index], color: selectedColor),
-                                    onPressed: () => Navigator.of(context).pop(icons[index]),
+                                    icon: Icon(
+                                      icons[index],
+                                      color: selectedColor,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(icons[index]),
                                   ),
                                 ),
                               ),
@@ -219,16 +228,23 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Pick a color', style: GoogleFonts.quicksand()),
+                              title: Text(
+                                'Pick a color',
+                                style: GoogleFonts.quicksand(),
+                              ),
                               content: SingleChildScrollView(
                                 child: ColorPicker(
                                   pickerColor: selectedColor,
-                                  onColorChanged: (color) => setState(() => selectedColor = color),
+                                  onColorChanged: (color) =>
+                                      setState(() => selectedColor = color),
                                 ),
                               ),
                               actions: [
                                 ElevatedButton(
-                                  child: Text('Done', style: GoogleFonts.quicksand()),
+                                  child: Text(
+                                    'Done',
+                                    style: GoogleFonts.quicksand(),
+                                  ),
                                   onPressed: () => Navigator.of(context).pop(),
                                 ),
                               ],
@@ -450,12 +466,14 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     items: ['Feeling', 'Need', 'Thought']
-                        .map((type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type, style: GoogleFonts.quicksand()),
-                            ))
+                        .map(
+                          (type) => DropdownMenuItem(
+                            value: type,
+                            child: Text(type, style: GoogleFonts.quicksand()),
+                          ),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
@@ -543,19 +561,24 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                             builder: (context) => Dialog(
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                height: MediaQuery.of(context).size.height * 0.6,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.6,
                                 child: GridView.builder(
                                   padding: const EdgeInsets.all(16),
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 6,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
-                                  ),
+                                        crossAxisCount: 6,
+                                        crossAxisSpacing: 8,
+                                        mainAxisSpacing: 8,
+                                      ),
                                   itemCount: icons.length,
                                   itemBuilder: (context, index) => IconButton(
-                                    icon: Icon(icons[index], color: selectedColor),
-                                    onPressed: () => Navigator.of(context).pop(icons[index]),
+                                    icon: Icon(
+                                      icons[index],
+                                      color: selectedColor,
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(icons[index]),
                                   ),
                                 ),
                               ),
@@ -573,16 +596,23 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text('Pick a color', style: GoogleFonts.quicksand()),
+                              title: Text(
+                                'Pick a color',
+                                style: GoogleFonts.quicksand(),
+                              ),
                               content: SingleChildScrollView(
                                 child: ColorPicker(
                                   pickerColor: selectedColor,
-                                  onColorChanged: (color) => setState(() => selectedColor = color),
+                                  onColorChanged: (color) =>
+                                      setState(() => selectedColor = color),
                                 ),
                               ),
                               actions: [
                                 ElevatedButton(
-                                  child: Text('Done', style: GoogleFonts.quicksand()),
+                                  child: Text(
+                                    'Done',
+                                    style: GoogleFonts.quicksand(),
+                                  ),
                                   onPressed: () => Navigator.of(context).pop(),
                                 ),
                               ],
@@ -793,7 +823,9 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                     Icon(
                                       currentItem.icon,
                                       size: 100,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                     const SizedBox(height: 16),
                                     Text(
@@ -825,9 +857,8 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                             backgroundColor: Colors.purple,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                15.0,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 20,
@@ -844,29 +875,51 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                         ),
                                         ElevatedButton(
                                           onPressed: () {
-                                            Navigator.of(context).pop(); // Close info dialog
-                                            _showEditDialog(context, currentItem, (updatedItem) async {
-                                              // Update the list
-                                              if (updatedItem is Feeling) {
-                                                int index = _feelings.indexWhere((f) => f.name == item.name);
-                                                if (index != -1) _feelings[index] = updatedItem;
-                                              } else if (updatedItem is Need) {
-                                                int index = _needs.indexWhere((n) => n.name == item.name);
-                                                if (index != -1) _needs[index] = updatedItem;
-                                              } else if (updatedItem is Thought) {
-                                                int index = _thoughts.indexWhere((t) => t.name == item.name);
-                                                if (index != -1) _thoughts[index] = updatedItem;
-                                              }
-                                              await _loadData();
-                                            });
+                                            Navigator.of(
+                                              context,
+                                            ).pop(); // Close info dialog
+                                            _showEditDialog(
+                                              context,
+                                              currentItem,
+                                              (updatedItem) async {
+                                                // Update the list
+                                                if (updatedItem is Feeling) {
+                                                  int index = _feelings
+                                                      .indexWhere(
+                                                        (f) =>
+                                                            f.name == item.name,
+                                                      );
+                                                  if (index != -1)
+                                                    _feelings[index] =
+                                                        updatedItem;
+                                                } else if (updatedItem
+                                                    is Need) {
+                                                  int index = _needs.indexWhere(
+                                                    (n) => n.name == item.name,
+                                                  );
+                                                  if (index != -1)
+                                                    _needs[index] = updatedItem;
+                                                } else if (updatedItem
+                                                    is Thought) {
+                                                  int index = _thoughts
+                                                      .indexWhere(
+                                                        (t) =>
+                                                            t.name == item.name,
+                                                      );
+                                                  if (index != -1)
+                                                    _thoughts[index] =
+                                                        updatedItem;
+                                                }
+                                                await _loadData();
+                                              },
+                                            );
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.blue,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                15.0,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 20,
@@ -885,16 +938,31 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                           onPressed: () async {
                                             bool isCustom = false;
                                             if (currentItem is Feeling) {
-                                              isCustom = await EmotionService.isCustomFeeling(currentItem.name);
+                                              isCustom =
+                                                  await EmotionService.isCustomFeeling(
+                                                    currentItem.name,
+                                                  );
                                             } else if (currentItem is Need) {
-                                              isCustom = await EmotionService.isCustomNeed(currentItem.name);
+                                              isCustom =
+                                                  await EmotionService.isCustomNeed(
+                                                    currentItem.name,
+                                                  );
                                             } else if (currentItem is Thought) {
-                                              isCustom = await EmotionService.isCustomThought(currentItem.name);
+                                              isCustom =
+                                                  await EmotionService.isCustomThought(
+                                                    currentItem.name,
+                                                  );
                                             }
                                             if (!isCustom) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
                                                 SnackBar(
-                                                  content: Text('Cannot delete default items.', style: GoogleFonts.quicksand()),
+                                                  content: Text(
+                                                    'Cannot delete default items.',
+                                                    style:
+                                                        GoogleFonts.quicksand(),
+                                                  ),
                                                 ),
                                               );
                                               return;
@@ -902,27 +970,58 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                             final confirmed = await showDialog<bool>(
                                               context: context,
                                               builder: (context) => AlertDialog(
-                                                title: Text('Confirm Delete', style: GoogleFonts.quicksand()),
-                                                content: Text('Are you sure you want to delete "${currentItem.name}"?', style: GoogleFonts.quicksand()),
+                                                title: Text(
+                                                  'Confirm Delete',
+                                                  style:
+                                                      GoogleFonts.quicksand(),
+                                                ),
+                                                content: Text(
+                                                  'Are you sure you want to delete "${currentItem.name}"?',
+                                                  style:
+                                                      GoogleFonts.quicksand(),
+                                                ),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed: () => Navigator.of(context).pop(false),
-                                                    child: Text('Cancel', style: GoogleFonts.quicksand()),
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(false),
+                                                    child: Text(
+                                                      'Cancel',
+                                                      style:
+                                                          GoogleFonts.quicksand(),
+                                                    ),
                                                   ),
                                                   TextButton(
-                                                    onPressed: () => Navigator.of(context).pop(true),
-                                                    child: Text('Delete', style: GoogleFonts.quicksand(color: Colors.red)),
+                                                    onPressed: () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(true),
+                                                    child: Text(
+                                                      'Delete',
+                                                      style:
+                                                          GoogleFonts.quicksand(
+                                                            color: Colors.red,
+                                                          ),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
                                             );
                                             if (confirmed == true) {
                                               if (currentItem is Feeling) {
-                                                await EmotionService.deleteFeeling(currentItem.name);
+                                                await EmotionService.deleteFeeling(
+                                                  currentItem.name,
+                                                );
                                               } else if (currentItem is Need) {
-                                                await EmotionService.deleteNeed(currentItem.name);
-                                              } else if (currentItem is Thought) {
-                                                await EmotionService.deleteThought(currentItem.name);
+                                                await EmotionService.deleteNeed(
+                                                  currentItem.name,
+                                                );
+                                              } else if (currentItem
+                                                  is Thought) {
+                                                await EmotionService.deleteThought(
+                                                  currentItem.name,
+                                                );
                                               }
                                               await _loadData();
                                               Navigator.of(context).pop();
@@ -932,9 +1031,8 @@ class _FeelingSelectionScreenState extends State<FeelingSelectionScreen>
                                             backgroundColor: Colors.red,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                15.0,
-                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(15.0),
                                             ),
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 20,
