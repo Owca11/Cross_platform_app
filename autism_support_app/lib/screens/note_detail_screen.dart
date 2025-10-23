@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/note.dart';
@@ -28,6 +27,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late bool _isErasing;
   late Color _currentColor;
   late double _strokeWidth;
+  late ScrollController _scrollController;
 
   final List<String> _categories = [
     'General',
@@ -60,6 +60,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _isErasing = false;
     _currentColor = _drawingColor;
     _strokeWidth = 3.0; // Default stroke width
+    _scrollController = ScrollController();
   }
 
   @override
@@ -198,6 +199,132 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     );
   }
 
+  void _showDrawingDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('Draw'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isErasing = !_isErasing;
+                            _currentColor = _isErasing
+                                ? Colors.white
+                                : _drawingColor;
+                          });
+                        },
+                        icon: Icon(
+                          _isErasing ? Icons.edit : Icons.cleaning_services,
+                        ),
+                        label: Text(_isErasing ? 'Draw' : 'Erase'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isErasing
+                              ? Colors.red.shade300
+                              : Colors.blue.shade300,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _drawingData.clear();
+                          });
+                        },
+                        icon: Icon(Icons.clear),
+                        label: Text('Clear'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey.shade300,
+                          foregroundColor: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Stroke Width: ${_strokeWidth.toStringAsFixed(1)}',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Slider(
+                  value: _strokeWidth,
+                  min: 1.0,
+                  max: 10.0,
+                  divisions: 9,
+                  label: _strokeWidth.toStringAsFixed(1),
+                  onChanged: (value) {
+                    setState(() {
+                      _strokeWidth = value;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white,
+                  ),
+                  child: ClipRect(
+                    child: Listener(
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (details) {
+                        setState(() {
+                          _drawingData.add({
+                            'points': [details.localPosition],
+                            'color': _currentColor.value,
+                            'strokeWidth': _strokeWidth,
+                          });
+                        });
+                      },
+                      onPointerMove: (details) {
+                        setState(() {
+                          if (_drawingData.isNotEmpty) {
+                            final clampedPosition = Offset(
+                              details.localPosition.dx.clamp(0.0, 300.0),
+                              details.localPosition.dy.clamp(0.0, 300.0),
+                            );
+                            (_drawingData.last['points'] as List<Offset>).add(
+                              clampedPosition,
+                            );
+                          }
+                        });
+                      },
+                      child: CustomPaint(
+                        painter: DrawingPainter(_drawingData, _drawingColor),
+                        size: Size.infinite,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,6 +360,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         child: Stack(
           children: [
             SingleChildScrollView(
+              controller: _scrollController,
               padding: EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,89 +511,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
 
                   // Content based on type
                   if (_selectedType == NoteType.drawing) ...[
-                    Text(
-                      'Drawing',
-                      style: GoogleFonts.quicksand(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    ElevatedButton.icon(
+                      onPressed: _showDrawingDialog,
+                      icon: Icon(Icons.brush),
+                      label: Text('Open Drawing Canvas'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade300,
+                        foregroundColor: Colors.white,
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Container(
-                      height: MediaQuery.of(context).size.height * 0.45,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.white,
-                      ),
-                      child: ClipRect(
-                        child: RawGestureDetector(
-                          gestures: {
-                            PanGestureRecognizer:
-                                GestureRecognizerFactoryWithHandlers<
-                                  PanGestureRecognizer
-                                >(() => PanGestureRecognizer(), (
-                                  PanGestureRecognizer instance,
-                                ) {
-                                  instance
-                                    ..onStart = (details) {
-                                      setState(() {
-                                        _drawingData.add({
-                                          'points': [details.localPosition],
-                                          'color': _currentColor.value,
-                                          'strokeWidth': _strokeWidth,
-                                        });
-                                      });
-                                    }
-                                    ..onUpdate = (details) {
-                                      setState(() {
-                                        if (_drawingData.isNotEmpty) {
-                                          // Clamp the position to the drawing area bounds
-                                          final clampedPosition = Offset(
-                                            details.localPosition.dx.clamp(
-                                              0.0,
-                                              MediaQuery.of(
-                                                    context,
-                                                  ).size.width -
-                                                  32,
-                                            ),
-                                            details.localPosition.dy.clamp(
-                                              0.0,
-                                              MediaQuery.of(
-                                                    context,
-                                                  ).size.height *
-                                                  0.45,
-                                            ),
-                                          );
-                                          (_drawingData.last['points']
-                                                  as List<Offset>)
-                                              .add(clampedPosition);
-                                        }
-                                      });
-                                    }
-                                    ..onEnd = (details) {
-                                      // Stroke ended, no need to add anything
-                                    };
-                                }),
-                          },
-                          child: CustomPaint(
-                            painter: DrawingPainter(
-                              _drawingData,
-                              _drawingColor,
-                            ),
-                            size: Size.infinite,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _drawingData.clear();
-                        });
-                      },
-                      child: Text('Clear Drawing'),
                     ),
                   ] else if (_selectedType == NoteType.shopping) ...[
                     Text(

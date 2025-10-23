@@ -1,11 +1,14 @@
-# TODO: Improve Drawing Notes Functionality
-
-## Tasks
-
-- [x] Add color picker for drawing: Introduce a `_drawingColor` variable (default black), add a color picker button next to the drawing area, and update `DrawingPainter` to use this color in `note_detail_screen.dart`.
-- [x] Make note backgrounds lighter: Change card color in `notes_screen.dart` from `Colors.pink.shade50` to `Colors.white.withOpacity(0.7)` for a lighter appearance.
-- [x] Fix drawing save/display: Clip drawing positions to the container bounds (0 to 300 height) during drawing in `note_detail_screen.dart`, and ensure the display in `notes_screen.dart` also clips to prevent overflow.
-- [x] Change save button: Replace the flower emoji with `Icon(Icons.save)` in the FAB in `note_detail_screen.dart`.
-- [ ] Fix empty white space in note creation view: Apply gradient background to the entire screen in `note_detail_screen.dart`.
-- [ ] Fix drawing color saving: Modify Note model to store colors per stroke, update DrawingPainter to render per-stroke colors, and fix positioning/clipping issues.
-- [ ] Add eraser tool: Implement eraser functionality in the drawing area in `note_detail_screen.dart`.
+- [x] Replace RawGestureDetector with Listener in note_detail_screen.dart to handle drawing gestures without conflicting with scrolling
+- [x] Implement onPointerDown, onPointerMove, and onPointerUp handlers for drawing logic
+- [x] Set HitTestBehavior.opaque on Listener to absorb gestures and prevent scrolling
+- [x] Remove SingleChildScrollView to make the page non-scrollable and fit content within screen height
+- [x] Adjust layout to ensure all elements fit without scrolling
+- [x] Add ScrollController and \_isDrawing flag to control scrolling behavior
+- [x] Set physics to NeverScrollableScrollPhysics when drawing, AlwaysScrollableScrollPhysics otherwise
+- [x] Set \_isDrawing to true on onPointerDown and false on onPointerUp
+- [x] Replace physics logic with \_selectedType == NoteType.drawing check for simpler scrolling control
+- [x] Remove unused \_isDrawing variable and related logic
+- [x] Move drawing functionality to a separate popup dialog to eliminate scrolling conflicts
+- [x] Add button to open drawing canvas in popup
+- [x] Implement drawing in dialog with color picker, eraser, stroke width slider, and clear button
+- [x] Verify drawing works smoothly on mobile without scrolling interference
